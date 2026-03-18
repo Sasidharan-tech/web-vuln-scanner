@@ -145,7 +145,7 @@ class CSRFScanner(BaseScanner):
         try:
             response = self.make_request(
                 url,
-                method="POST",
+                method=method.upper(),
                 data=data,
             )
             if response is None:

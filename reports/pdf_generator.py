@@ -179,7 +179,7 @@ def generate_pdf_report(
     # Cover page
     # ------------------------------------------------------------------ #
     story.append(Spacer(1, 3 * cm))
-    story.append(Paragraph("🔒 Vulnerability Scan Report", title_style))
+    story.append(Paragraph("Vulnerability Scan Report", title_style))
     story.append(Spacer(1, 0.4 * cm))
     story.append(Paragraph(f"<b>Target:</b> {target_url}", subtitle_style))
     story.append(Paragraph(

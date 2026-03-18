@@ -255,6 +255,9 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
     global native_scan_state
 
     try:
+        import time as _time
+        scan_start = _time.monotonic()
+
         parsed = urlparse(target_url)
         if not parsed.scheme:
             target_url = "http://" + target_url
@@ -361,6 +364,9 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
 
         session.save_vulnerabilities(all_vulnerabilities)
 
+        scan_elapsed = _time.monotonic() - scan_start
+        scan_duration = f"{scan_elapsed:.1f}s"
+
         # Persist scan history for authenticated users
         if username:
             try:
@@ -372,8 +378,8 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
                     conn.execute(
                         """INSERT INTO scan_history
                            (username, target_url, modules, vulnerabilities,
-                            urls_crawled, forms_found, severity_summary, created_at)
-                           VALUES (?,?,?,?,?,?,?,?)""",
+                            urls_crawled, forms_found, scan_duration, severity_summary, created_at)
+                           VALUES (?,?,?,?,?,?,?,?,?)""",
                         (
                             username,
                             target_url,
@@ -381,11 +387,12 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
                             json.dumps(all_vulnerabilities),
                             len(urls),
                             len(forms),
+                            scan_duration,
                             json.dumps(severity_summary),
                             datetime.now().isoformat(),
                         ),
                     )
-            except Exception as hist_exc:
+            except sqlite3.Error as hist_exc:
                 event_queue.put({"log": f"[WARNING] Could not save scan history: {hist_exc}"})
 
         event_queue.put({
@@ -881,7 +888,7 @@ async def get_scan_history(
         d = dict(r)
         try:
             d["severity_summary"] = json.loads(d["severity_summary"] or "{}")
-        except Exception:
+        except (json.JSONDecodeError, TypeError):
             d["severity_summary"] = {}
         items.append(d)
     return {"total": total, "page": page, "per_page": per_page, "items": items}
@@ -904,11 +911,11 @@ async def get_scan_history_detail(
     d = dict(row)
     try:
         d["vulnerabilities"] = json.loads(d["vulnerabilities"] or "[]")
-    except Exception:
+    except (json.JSONDecodeError, TypeError):
         d["vulnerabilities"] = []
     try:
         d["severity_summary"] = json.loads(d["severity_summary"] or "{}")
-    except Exception:
+    except (json.JSONDecodeError, TypeError):
         d["severity_summary"] = {}
     return d
 
