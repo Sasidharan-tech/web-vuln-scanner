@@ -15,6 +15,7 @@ urllib3>=2.0.0
 
 # Report generation
 jinja2>=3.1.0
+reportlab>=4.0.0
 
 # CLI colors (optional but recommended)
 colorama>=0.4.6
