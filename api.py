@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import Body, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, field_validator
@@ -40,7 +40,9 @@ from scanner.file_inclusion import FileInclusionScanner
 from scanner.open_redirect import OpenRedirectScanner
 from scanner.headers import HeadersScanner
 from scanner.cookies import CookieScanner
+from scanner.csrf import CSRFScanner
 from database.session import ScanSession
+from reports.pdf_generator import generate_pdf_report
 
 # ---------------------------------------------------------------------------
 # GitHub scanner import
@@ -161,6 +163,20 @@ def _get_auth_conn() -> sqlite3.Connection:
             created_at TEXT NOT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS scan_history (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            username         TEXT    NOT NULL,
+            target_url       TEXT    NOT NULL,
+            modules          TEXT    NOT NULL DEFAULT '',
+            vulnerabilities  TEXT    NOT NULL DEFAULT '[]',
+            urls_crawled     INTEGER NOT NULL DEFAULT 0,
+            forms_found      INTEGER NOT NULL DEFAULT 0,
+            scan_duration    TEXT    NOT NULL DEFAULT '',
+            severity_summary TEXT    NOT NULL DEFAULT '{}',
+            created_at       TEXT    NOT NULL
+        )
+    """)
     conn.commit()
     return conn
 
@@ -234,11 +250,14 @@ class ScanEventQueue:
         return self._q.empty()
 
 
-def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event_queue):
+def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event_queue, username=None):
     """Run the native vulnerability scan in a background thread."""
     global native_scan_state
 
     try:
+        import time as _time
+        scan_start = _time.monotonic()
+
         parsed = urlparse(target_url)
         if not parsed.scheme:
             target_url = "http://" + target_url
@@ -286,7 +305,7 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
 
         module_list = (
             modules.split(",") if modules
-            else ["sql", "xss", "cmd", "lfi", "redirect", "headers", "cookies"]
+            else ["sql", "xss", "cmd", "lfi", "redirect", "headers", "cookies", "csrf"]
         )
 
         scanner_classes = {
@@ -297,6 +316,7 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
             "redirect": (OpenRedirectScanner, "Open Redirect"),
             "headers":  (HeadersScanner, "Security Headers"),
             "cookies":  (CookieScanner, "Cookie Security"),
+            "csrf":     (CSRFScanner, "CSRF"),
         }
 
         all_vulnerabilities = []
@@ -344,6 +364,37 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
 
         session.save_vulnerabilities(all_vulnerabilities)
 
+        scan_elapsed = _time.monotonic() - scan_start
+        scan_duration = f"{scan_elapsed:.1f}s"
+
+        # Persist scan history for authenticated users
+        if username:
+            try:
+                severity_summary = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "Info": 0}
+                for v in all_vulnerabilities:
+                    sev = v.get("severity", "Info")
+                    severity_summary[sev] = severity_summary.get(sev, 0) + 1
+                with _get_auth_conn() as conn:
+                    conn.execute(
+                        """INSERT INTO scan_history
+                           (username, target_url, modules, vulnerabilities,
+                            urls_crawled, forms_found, scan_duration, severity_summary, created_at)
+                           VALUES (?,?,?,?,?,?,?,?,?)""",
+                        (
+                            username,
+                            target_url,
+                            modules or "",
+                            json.dumps(all_vulnerabilities),
+                            len(urls),
+                            len(forms),
+                            scan_duration,
+                            json.dumps(severity_summary),
+                            datetime.now().isoformat(),
+                        ),
+                    )
+            except sqlite3.Error as hist_exc:
+                event_queue.put({"log": f"[WARNING] Could not save scan history: {hist_exc}"})
+
         event_queue.put({
             "status": "completed",
             "phase": "Scan Complete",
@@ -361,14 +412,29 @@ def _run_native_scan(target_url, modules, depth, max_urls, timeout, delay, event
 @app.get("/api/scan")
 async def start_native_scan(
     url: str,
-    modules: str = "sql,xss,cmd,lfi,redirect,headers,cookies",
+    modules: str = "sql,xss,cmd,lfi,redirect,headers,cookies,csrf",
     depth: int = 2,
     max_urls: int = 100,
     timeout: int = 10,
     delay: float = 0.5,
+    authorization: Optional[str] = Header(default=None),
 ):
     """Start a native vulnerability scan and stream events via Server-Sent Events."""
     global native_scan_state
+
+    # Resolve authenticated username (if any) so history can be saved
+    username: Optional[str] = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:]
+        try:
+            with _get_auth_conn() as conn:
+                row = conn.execute(
+                    "SELECT username FROM auth_tokens WHERE token = ?", (token,)
+                ).fetchone()
+            if row:
+                username = row["username"]
+        except Exception:
+            pass  # Non-fatal — scan proceeds without history
 
     if native_scan_state["running"]:
         raise HTTPException(status_code=400, detail="A scan is already in progress")
@@ -379,7 +445,7 @@ async def start_native_scan(
 
     scan_thread = threading.Thread(
         target=_run_native_scan,
-        args=(url, modules, depth, max_urls, timeout, delay, event_queue),
+        args=(url, modules, depth, max_urls, timeout, delay, event_queue, username),
         daemon=True,
     )
     scan_thread.start()
@@ -777,6 +843,196 @@ async def auth_me(authorization: Optional[str] = Header(default=None)):
     if row is None:
         raise HTTPException(status_code=401, detail="Session expired or invalid")
     return {"username": row["username"]}
+
+
+# ===========================================================================
+# SCAN HISTORY (authenticated users)
+# ===========================================================================
+
+def _require_auth(authorization: Optional[str]) -> str:
+    """Validate Bearer token and return the username, or raise 401."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    token = authorization[7:]
+    with _get_auth_conn() as conn:
+        row = conn.execute(
+            "SELECT username FROM auth_tokens WHERE token = ?", (token,)
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=401, detail="Session expired or invalid")
+    return row["username"]
+
+
+@app.get("/api/history")
+async def get_scan_history(
+    page: int = 1,
+    per_page: int = 20,
+    authorization: Optional[str] = Header(default=None),
+):
+    """Return paginated scan history for the authenticated user."""
+    username = _require_auth(authorization)
+    offset = (page - 1) * per_page
+    with _get_auth_conn() as conn:
+        total = conn.execute(
+            "SELECT COUNT(*) FROM scan_history WHERE username = ?", (username,)
+        ).fetchone()[0]
+        rows = conn.execute(
+            """SELECT id, target_url, modules, urls_crawled, forms_found,
+                      severity_summary, created_at
+               FROM scan_history WHERE username = ?
+               ORDER BY id DESC LIMIT ? OFFSET ?""",
+            (username, per_page, offset),
+        ).fetchall()
+    items = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["severity_summary"] = json.loads(d["severity_summary"] or "{}")
+        except (json.JSONDecodeError, TypeError):
+            d["severity_summary"] = {}
+        items.append(d)
+    return {"total": total, "page": page, "per_page": per_page, "items": items}
+
+
+@app.get("/api/history/{scan_id}")
+async def get_scan_history_detail(
+    scan_id: int,
+    authorization: Optional[str] = Header(default=None),
+):
+    """Return full detail (including vulnerabilities) for a single scan history entry."""
+    username = _require_auth(authorization)
+    with _get_auth_conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM scan_history WHERE id = ? AND username = ?",
+            (scan_id, username),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Scan history record not found")
+    d = dict(row)
+    try:
+        d["vulnerabilities"] = json.loads(d["vulnerabilities"] or "[]")
+    except (json.JSONDecodeError, TypeError):
+        d["vulnerabilities"] = []
+    try:
+        d["severity_summary"] = json.loads(d["severity_summary"] or "{}")
+    except (json.JSONDecodeError, TypeError):
+        d["severity_summary"] = {}
+    return d
+
+
+@app.delete("/api/history/{scan_id}")
+async def delete_scan_history(
+    scan_id: int,
+    authorization: Optional[str] = Header(default=None),
+):
+    """Delete a single scan history record (must belong to the authenticated user)."""
+    username = _require_auth(authorization)
+    with _get_auth_conn() as conn:
+        result = conn.execute(
+            "DELETE FROM scan_history WHERE id = ? AND username = ?",
+            (scan_id, username),
+        )
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Record not found or not yours")
+    return {"status": "deleted"}
+
+
+# ===========================================================================
+# PDF REPORT GENERATION
+# ===========================================================================
+
+@app.post("/api/report/pdf")
+async def generate_pdf(
+    scan_id: int,
+    authorization: Optional[str] = Header(default=None),
+):
+    """
+    Generate a PDF report for a saved scan history record.
+    Returns the PDF file as a download.
+    """
+    username = _require_auth(authorization)
+    with _get_auth_conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM scan_history WHERE id = ? AND username = ?",
+            (scan_id, username),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Scan history record not found")
+
+    d = dict(row)
+    try:
+        vulns = json.loads(d["vulnerabilities"] or "[]")
+    except Exception:
+        vulns = []
+
+    # Build a safe filename
+    safe_name = re.sub(r"[^\w\-.]", "_", d.get("target_url", "scan"))[:40]
+    ts = re.sub(r"[:\s]", "-", d.get("created_at", "")[:19])
+    pdf_path = Path("reports") / f"scan_{scan_id}_{safe_name}_{ts}.pdf"
+
+    try:
+        out = generate_pdf_report(
+            output_path=str(pdf_path),
+            target_url=d.get("target_url", ""),
+            vulnerabilities=vulns,
+            urls_crawled=d.get("urls_crawled", 0),
+            forms_found=d.get("forms_found", 0),
+            modules_used=(d.get("modules") or "").split(","),
+        )
+    except ImportError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
+
+    return FileResponse(
+        out,
+        media_type="application/pdf",
+        filename=pdf_path.name,
+    )
+
+
+@app.post("/api/report/pdf/inline")
+async def generate_pdf_inline(
+    request_body: Dict = Body(...),
+):
+    """
+    Generate a PDF report from an inline vulnerability payload (no auth required).
+    Accepts the same JSON shape as a scan result.
+    """
+    target_url = request_body.get("target_url", "")
+    vulns = request_body.get("vulnerabilities", [])
+    urls_crawled = request_body.get("urls_crawled", 0)
+    forms_found = request_body.get("forms_found", 0)
+    scan_duration = request_body.get("scan_duration", "")
+    modules_used = request_body.get("modules_used", [])
+
+    if not target_url:
+        raise HTTPException(status_code=422, detail="target_url is required")
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_name = re.sub(r"[^\w\-.]", "_", target_url)[:40]
+    pdf_path = Path("reports") / f"inline_{safe_name}_{ts}.pdf"
+
+    try:
+        out = generate_pdf_report(
+            output_path=str(pdf_path),
+            target_url=target_url,
+            vulnerabilities=vulns,
+            urls_crawled=urls_crawled,
+            forms_found=forms_found,
+            scan_duration=scan_duration,
+            modules_used=modules_used,
+        )
+    except ImportError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
+
+    return FileResponse(
+        out,
+        media_type="application/pdf",
+        filename=pdf_path.name,
+    )
 
 
 # ===========================================================================

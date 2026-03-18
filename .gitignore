@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# SQLite databases
+database/*.db
+
+# Reports output
+reports/*.pdf
+reports/*.html
+reports/*.json
+reports/github/
+
+# Session data
+sessions/
+
+# mitmproxy cert
+*.pem
+
+# Environment
+.env
+!frontend/.env
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend build artifacts (managed by frontend/.gitignore)
+frontend/node_modules/
+frontend/dist/
